@@ -277,6 +277,10 @@
   },
   "blocks": {
     "product_card": {
+      "cart": {
+        "adding": "Adding...",
+        "error": "There was an error adding this item to your cart. Please try again."
+      },
       "preview": {
         "product": "Product",
         "no_product": "No product selected",
