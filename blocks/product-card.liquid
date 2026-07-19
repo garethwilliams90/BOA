@@ -34,6 +34,7 @@
   data-selected-variant-id="{{ first_variant.id }}"
   data-redirect-to-cart="{{ block.settings.redirect_to_cart }}"
   data-cart-url="{{ routes.cart_url }}"
+  data-logic-src="{{ 'product-card-logic.js' | asset_url }}"
   {{ block.shopify_attributes }}
 >
   {%- if product != blank and first_variant != blank -%}
@@ -349,13 +350,6 @@
   .product-card-block__empty {
     color: rgba(var(--color-foreground), 0.7);
   }
-
-  @media screen and (min-width: 750px) {
-    .product-card-block {
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
-      align-items: start;
-    }
-  }
 {% endstylesheet %}
 
 {% javascript %}
@@ -409,8 +403,7 @@
       const variantId = Number(swatch.dataset.variantId);
       const colorValue = swatch.dataset.colorValue;
 
-      return this.variants.find((variant) => variant.id === variantId)
-        || this.variants.find((variant) => variant.color === colorValue);
+      return window.ProductCardLogic.findVariant(this.variants, { variantId, colorValue });
     }
 
     updateVariant(variant, selectedSwatch) {
@@ -463,9 +456,14 @@
         return;
       }
 
-      this.button.disabled = !variant.available;
-      this.button.textContent = variant.available ? this.button.dataset.availableText : this.button.dataset.soldOutText;
-      this.button.classList.toggle('product-card-block__button--sold-out', !variant.available);
+      const { disabled, text } = window.ProductCardLogic.deriveCtaState(variant, {
+        availableText: this.button.dataset.availableText,
+        soldOutText: this.button.dataset.soldOutText,
+      });
+
+      this.button.disabled = disabled;
+      this.button.textContent = text;
+      this.button.classList.toggle('product-card-block__button--sold-out', disabled);
     }
 
     updateSwatches(selectedSwatch) {
@@ -485,13 +483,13 @@
     getSelectedVariant() {
       const selectedVariantId = Number(this.card.dataset.selectedVariantId);
 
-      return this.variants.find((variant) => variant.id === selectedVariantId);
+      return window.ProductCardLogic.getSelectedVariant(this.variants, selectedVariantId);
     }
 
     async addSelectedVariantToCart() {
       const variant = this.getSelectedVariant();
 
-      if (!variant || !variant.available || this.isAdding) {
+      if (!window.ProductCardLogic.canAddToCart(variant, { isAdding: this.isAdding })) {
         return;
       }
 
@@ -573,6 +571,37 @@
     }
   }
 
+  let logicLoadPromise = null;
+
+  const loadProductCardLogic = (src) => {
+    if (window.ProductCardLogic) {
+      return Promise.resolve();
+    }
+
+    if (logicLoadPromise) {
+      return logicLoadPromise;
+    }
+
+    logicLoadPromise = new Promise((resolve, reject) => {
+      const existingScript = document.querySelector('[data-product-card-logic-script]');
+
+      if (existingScript) {
+        existingScript.addEventListener('load', resolve, { once: true });
+        existingScript.addEventListener('error', reject, { once: true });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = src;
+      script.dataset.productCardLogicScript = 'true';
+      script.addEventListener('load', resolve, { once: true });
+      script.addEventListener('error', reject, { once: true });
+      document.head.appendChild(script);
+    });
+
+    return logicLoadPromise;
+  };
+
   const initProductCardBlocks = () => {
     document.querySelectorAll('[data-product-card-block]').forEach((card) => {
       if (card.dataset.productCardInitialized === 'true') {
@@ -580,7 +609,12 @@
       }
 
       card.dataset.productCardInitialized = 'true';
-      new ProductCardBlock(card);
+
+      loadProductCardLogic(card.dataset.logicSrc)
+        .then(() => new ProductCardBlock(card))
+        .catch(() => {
+          card.dataset.productCardInitialized = 'false';
+        });
     });
   };
 

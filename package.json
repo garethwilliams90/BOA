@@ -1,0 +1,15 @@
+{
+  "name": "boa-product-variants-carousel-theme",
+  "private": true,
+  "description": "Shopify theme (Dawn-based) for the Product Variants Carousel assignment.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node tests/e2e-smoke.mjs",
+    "test:e2e:rtl": "node tests/e2e-rtl-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1",
+    "vitest": "^2.1.4"
+  }
+}

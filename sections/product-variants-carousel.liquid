@@ -1,3 +1,5 @@
+{{ 'swiper-bundle.min.css' | asset_url | stylesheet_tag }}
+
 {%- style -%}
   .section-{{ section.id }}-product-variants-carousel {
     display: flow-root;
@@ -28,7 +30,36 @@
   {%- endif -%}
 
   <div class="product-variants-carousel__blocks">
-    {% content_for 'blocks' %}
+    <div
+      class="product-variants-carousel__swiper swiper"
+      data-product-variants-carousel
+      data-swiper-src="{{ 'swiper-bundle.min.js' | asset_url }}"
+      role="region"
+      aria-roledescription="{{ 'sections.product-variants-carousel.carousel' | t }}"
+      aria-label="{% if section.settings.title != blank %}{{ section.settings.title | escape }}{% else %}{{ 'sections.product-variants-carousel.carousel' | t }}{% endif %}"
+    >
+      <div class="swiper-wrapper product-variants-carousel__wrapper">
+        {% content_for 'blocks' %}
+      </div>
+
+      <div class="product-variants-carousel__pagination" aria-hidden="true"></div>
+
+      <button
+        type="button"
+        class="product-variants-carousel__nav-button product-variants-carousel__nav-button--prev"
+        aria-label="{{ 'sections.product-variants-carousel.previous_slide' | t }}"
+      >
+        <span class="svg-wrapper">{{- 'icon-caret.svg' | inline_asset_content -}}</span>
+      </button>
+
+      <button
+        type="button"
+        class="product-variants-carousel__nav-button product-variants-carousel__nav-button--next"
+        aria-label="{{ 'sections.product-variants-carousel.next_slide' | t }}"
+      >
+        <span class="svg-wrapper">{{- 'icon-caret.svg' | inline_asset_content -}}</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -57,11 +88,215 @@
   }
 
   .product-variants-carousel__blocks {
-    display: grid;
-    gap: 1.6rem;
     margin-block-start: 2rem;
   }
+
+  .product-variants-carousel__swiper {
+    position: relative;
+    padding-inline: 0.4rem;
+  }
+
+  .product-variants-carousel__swiper .swiper-slide {
+    height: auto;
+  }
+
+  .product-variants-carousel__nav-button {
+    position: absolute;
+    top: 40%;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 4rem;
+    block-size: 4rem;
+    margin-block-start: -2rem;
+    padding: 0;
+    border: 0.1rem solid rgba(var(--color-foreground), 0.15);
+    border-radius: 50%;
+    background: rgb(var(--color-background));
+    color: rgb(var(--color-foreground));
+    cursor: pointer;
+    box-shadow: 0 0.1rem 0.4rem rgba(0, 0, 0, 0.12);
+    transition: opacity 0.2s ease;
+  }
+
+  .product-variants-carousel__nav-button--prev {
+    inset-inline-start: 0;
+  }
+
+  .product-variants-carousel__nav-button--next {
+    inset-inline-end: 0;
+  }
+
+  .product-variants-carousel__nav-button .icon-caret {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+    transform: rotate(90deg);
+  }
+
+  .product-variants-carousel__nav-button--next .icon-caret {
+    transform: rotate(-90deg);
+  }
+
+  .swiper-rtl .product-variants-carousel__nav-button--prev .icon-caret {
+    transform: rotate(-90deg);
+  }
+
+  .swiper-rtl .product-variants-carousel__nav-button--next .icon-caret {
+    transform: rotate(90deg);
+  }
+
+  .product-variants-carousel__nav-button:hover:not(.swiper-button-disabled) {
+    background: rgba(var(--color-foreground), 0.06);
+  }
+
+  .product-variants-carousel__nav-button.swiper-button-disabled,
+  .product-variants-carousel__nav-button.swiper-button-lock {
+    display: none;
+  }
+
+  .product-variants-carousel__pagination {
+    position: relative;
+    margin-block-start: 1.6rem;
+    text-align: center;
+  }
+
+  .product-variants-carousel__pagination .swiper-pagination-bullet {
+    background: rgb(var(--color-foreground));
+    opacity: 0.3;
+  }
+
+  .product-variants-carousel__pagination .swiper-pagination-bullet-active {
+    opacity: 1;
+  }
+
+  .product-variants-carousel__pagination.swiper-pagination-lock {
+    display: none;
+  }
+
+  @media screen and (max-width: 749px) {
+    .product-variants-carousel__nav-button {
+      inline-size: 3.2rem;
+      block-size: 3.2rem;
+    }
+  }
 {% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    let swiperLoadPromise = null;
+
+    function loadSwiperLibrary(src) {
+      if (window.Swiper) {
+        return Promise.resolve();
+      }
+
+      if (swiperLoadPromise) {
+        return swiperLoadPromise;
+      }
+
+      swiperLoadPromise = new Promise((resolve, reject) => {
+        const existingScript = document.querySelector('[data-swiper-bundle-script]');
+
+        if (existingScript) {
+          existingScript.addEventListener('load', resolve, { once: true });
+          existingScript.addEventListener('error', reject, { once: true });
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = src;
+        script.dataset.swiperBundleScript = 'true';
+        script.addEventListener('load', resolve, { once: true });
+        script.addEventListener('error', reject, { once: true });
+        document.head.appendChild(script);
+      });
+
+      return swiperLoadPromise;
+    }
+
+    function initCarousel(container) {
+      if (container.swiper) {
+        return;
+      }
+
+      // Shopify's Theme Blocks architecture wraps every rendered block in its own
+      // `.shopify-block` div (used by the theme editor for block selection and
+      // highlighting). Swiper requires slides to be direct children of
+      // `.swiper-wrapper`, so tag those wrapper divs as the actual slides rather
+      // than fighting Shopify's markup.
+      const wrapperEl = container.querySelector('.swiper-wrapper');
+
+      if (wrapperEl) {
+        Array.from(wrapperEl.children).forEach((slideEl) => {
+          slideEl.classList.add('swiper-slide');
+        });
+      }
+
+      const prevEl = container.querySelector('.product-variants-carousel__nav-button--prev');
+      const nextEl = container.querySelector('.product-variants-carousel__nav-button--next');
+      const paginationEl = container.querySelector('.product-variants-carousel__pagination');
+
+      new window.Swiper(container, {
+        slidesPerView: 1.1,
+        spaceBetween: 16,
+        watchOverflow: true,
+        grabCursor: true,
+        keyboard: {
+          enabled: true,
+          onlyInViewport: true,
+        },
+        navigation: {
+          prevEl,
+          nextEl,
+        },
+        pagination: paginationEl
+          ? {
+              el: paginationEl,
+              clickable: true,
+            }
+          : false,
+        breakpoints: {
+          750: {
+            slidesPerView: 2.1,
+            spaceBetween: 20,
+          },
+          990: {
+            slidesPerView: 3,
+            spaceBetween: 24,
+          },
+          1400: {
+            slidesPerView: 4,
+            spaceBetween: 24,
+          },
+        },
+      });
+    }
+
+    function initCarousels() {
+      document.querySelectorAll('[data-product-variants-carousel]').forEach((container) => {
+        if (container.swiper || container.dataset.swiperLoading === 'true') {
+          return;
+        }
+
+        container.dataset.swiperLoading = 'true';
+
+        loadSwiperLibrary(container.dataset.swiperSrc)
+          .then(() => {
+            container.dataset.swiperLoading = 'false';
+            initCarousel(container);
+          })
+          .catch(() => {
+            container.dataset.swiperLoading = 'false';
+          });
+      });
+    }
+
+    initCarousels();
+
+    document.addEventListener('shopify:section:load', initCarousels);
+  })();
+{% endjavascript %}
 
 {% schema %}
 {

@@ -303,6 +303,12 @@
       "announcement_bar": "Announcement bar"
     },
 
+    "product-variants-carousel": {
+      "previous_slide": "Previous product",
+      "next_slide": "Next product",
+      "carousel": "Product variants carousel"
+    },
+
     "header": {
       "announcement": "Announcement",
       "menu": "Menu",
