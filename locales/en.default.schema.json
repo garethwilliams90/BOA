@@ -2779,6 +2779,34 @@
         "name": "Page"
       }
     },
+    "product-variants-carousel": {
+      "name": "Product variants carousel",
+      "settings": {
+        "title": {
+          "label": "Section title",
+          "default": "Product variants carousel"
+        },
+        "icon": {
+          "label": "Icon SVG",
+          "info": "Paste inline SVG markup."
+        },
+        "margin_top": {
+          "label": "Top margin"
+        },
+        "margin_bottom": {
+          "label": "Bottom margin"
+        },
+        "padding_top": {
+          "label": "Top padding"
+        },
+        "padding_bottom": {
+          "label": "Bottom padding"
+        }
+      },
+      "presets": {
+        "name": "Product variants carousel"
+      }
+    },
     "quick-order-list": {
       "name": "Quick order list",
       "settings": {
