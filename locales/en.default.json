@@ -275,6 +275,21 @@
       "subtext": "404"
     }
   },
+  "blocks": {
+    "product_card": {
+      "preview": {
+        "product": "Product",
+        "no_product": "No product selected",
+        "redirect_to_cart": "Redirect to cart after add",
+        "custom_title": "Custom product title",
+        "custom_description": "Custom product description",
+        "label_text_color": "Label text color",
+        "label_background_color": "Label background color",
+        "cta_available_text": "CTA available text",
+        "cta_out_of_stock_text": "CTA out-of-stock text"
+      }
+    }
+  },
   "sections": {
     "announcements": {
       "previous_announcement": "Previous announcement",

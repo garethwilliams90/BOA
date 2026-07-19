@@ -1,0 +1,307 @@
+{%- liquid
+  assign product = block.settings.product
+  assign first_variant = product.variants.first
+  assign product_image = first_variant.featured_image | default: product.featured_image
+  assign product_title = block.settings.custom_title | default: product.title
+  assign product_description = block.settings.custom_description | default: product.description
+  assign product_labels = product.metafields.custom.product_labels.value
+  assign color_option = null
+  assign color_option_position = null
+  assign selected_color = null
+
+  if product != blank
+    for option in product.options_with_values
+      if option.name == 'Color'
+        assign color_option = option
+        assign color_option_position = forloop.index
+      endif
+    endfor
+
+    case color_option_position
+      when 1
+        assign selected_color = first_variant.option1
+      when 2
+        assign selected_color = first_variant.option2
+      when 3
+        assign selected_color = first_variant.option3
+    endcase
+  endif
+-%}
+
+<article class="product-card-block" {{ block.shopify_attributes }}>
+  {%- if product != blank and first_variant != blank -%}
+    <div class="product-card-block__media">
+      {%- if product_image != blank -%}
+        {{
+          product_image
+          | image_url: width: 900
+          | image_tag:
+            loading: 'lazy',
+            widths: '180, 360, 540, 720, 900',
+            sizes: '(min-width: 990px) 360px, (min-width: 750px) 45vw, 100vw',
+            class: 'product-card-block__image'
+        }}
+      {%- else -%}
+        {{ 'product-apparel-2' | placeholder_svg_tag: 'product-card-block__image product-card-block__placeholder' }}
+      {%- endif -%}
+    </div>
+
+    <div class="product-card-block__content">
+      {%- if product_labels != blank -%}
+        <ul class="product-card-block__labels list-unstyled" role="list">
+          {%- for label in product_labels -%}
+            <li
+              class="product-card-block__label"
+              style="--product-card-label-color: {{ block.settings.label_text_color }}; --product-card-label-background: {{ block.settings.label_background_color }};"
+            >
+              {{ label | escape }}
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      <h3 class="product-card-block__title">
+        {{ product_title | escape }}
+      </h3>
+
+      {%- if product_description != blank -%}
+        <div class="product-card-block__description rte">
+          {{ product_description }}
+        </div>
+      {%- endif -%}
+
+      <div class="product-card-block__prices">
+        <span class="product-card-block__price">
+          {{ first_variant.price | money }}
+        </span>
+
+        {%- if first_variant.compare_at_price > first_variant.price -%}
+          <s class="product-card-block__compare-price">
+            {{ first_variant.compare_at_price | money }}
+          </s>
+        {%- endif -%}
+      </div>
+
+      {%- if color_option != blank -%}
+        <div class="product-card-block__swatches">
+          {%- for value in color_option.values -%}
+            <button
+              type="button"
+              class="product-card-block__swatch{% if value == selected_color %} product-card-block__swatch--selected{% endif %}"
+              style="--product-card-swatch-color: {{ value | handle }};"
+              aria-label="{{ value | escape }}"
+              {% if value == selected_color %}
+                aria-current="true"
+              {% endif %}
+            >
+              <span class="visually-hidden">{{ value }}</span>
+            </button>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+      <button
+        type="button"
+        class="product-card-block__button button{% unless first_variant.available %} product-card-block__button--sold-out{% endunless %}"
+        {% unless first_variant.available %}
+          disabled
+        {% endunless %}
+      >
+        {%- if first_variant.available -%}
+          {{ block.settings.cta_available_text | escape }}
+        {%- else -%}
+          {{ block.settings.cta_out_of_stock_text | escape }}
+        {%- endif -%}
+      </button>
+    </div>
+  {%- else -%}
+    <div class="product-card-block__empty">
+      {{ 'blocks.product_card.preview.no_product' | t }}
+    </div>
+  {%- endif -%}
+</article>
+
+{% stylesheet %}
+  .product-card-block {
+    display: grid;
+    gap: 2rem;
+    padding: 2rem;
+    border: 0.1rem solid rgba(var(--color-foreground), 0.12);
+    border-radius: var(--media-radius);
+    background: rgb(var(--color-background));
+  }
+
+  .product-card-block__media {
+    overflow: hidden;
+    border-radius: var(--media-radius);
+    background: rgba(var(--color-foreground), 0.04);
+  }
+
+  .product-card-block__image {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  .product-card-block__placeholder {
+    inline-size: 100%;
+    min-block-size: 24rem;
+  }
+
+  .product-card-block__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.2rem;
+  }
+
+  .product-card-block__labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .product-card-block__label {
+    max-inline-size: 100%;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999rem;
+    color: var(--product-card-label-color);
+    background: var(--product-card-label-background);
+    font-size: 1.2rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .product-card-block__title {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+
+  .product-card-block__description {
+    color: rgba(var(--color-foreground), 0.75);
+  }
+
+  .product-card-block__description > * {
+    margin-block-start: 0;
+  }
+
+  .product-card-block__description > :last-child {
+    margin-block-end: 0;
+  }
+
+  .product-card-block__prices {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.8rem;
+  }
+
+  .product-card-block__price {
+    font-weight: 700;
+  }
+
+  .product-card-block__compare-price {
+    color: rgba(var(--color-foreground), 0.6);
+  }
+
+  .product-card-block__swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  .product-card-block__swatch {
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+    padding: 0;
+    border: 0.1rem solid rgba(var(--color-foreground), 0.25);
+    border-radius: 50%;
+    background-color: var(--product-card-swatch-color);
+    cursor: pointer;
+  }
+
+  .product-card-block__swatch--selected {
+    outline: 0.2rem solid rgb(var(--color-foreground));
+    outline-offset: 0.2rem;
+  }
+
+  .product-card-block__button {
+    margin-block-start: 0.4rem;
+  }
+
+  .product-card-block__button--sold-out {
+    opacity: 0.6;
+  }
+
+  .product-card-block__empty {
+    color: rgba(var(--color-foreground), 0.7);
+  }
+
+  @media screen and (min-width: 750px) {
+    .product-card-block {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:blocks.product_card.name",
+  "settings": [
+    {
+      "type": "product",
+      "id": "product",
+      "label": "t:blocks.product_card.settings.product.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "redirect_to_cart",
+      "label": "t:blocks.product_card.settings.redirect_to_cart.label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "custom_title",
+      "label": "t:blocks.product_card.settings.custom_title.label"
+    },
+    {
+      "type": "richtext",
+      "id": "custom_description",
+      "label": "t:blocks.product_card.settings.custom_description.label"
+    },
+    {
+      "type": "color",
+      "id": "label_text_color",
+      "label": "t:blocks.product_card.settings.label_text_color.label",
+      "default": "#121212"
+    },
+    {
+      "type": "color",
+      "id": "label_background_color",
+      "label": "t:blocks.product_card.settings.label_background_color.label",
+      "default": "#f3f3f3"
+    },
+    {
+      "type": "text",
+      "id": "cta_available_text",
+      "label": "t:blocks.product_card.settings.cta_available_text.label",
+      "default": "Add to cart"
+    },
+    {
+      "type": "text",
+      "id": "cta_out_of_stock_text",
+      "label": "t:blocks.product_card.settings.cta_out_of_stock_text.label",
+      "default": "Sold out"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.product_card.name"
+    }
+  ]
+}
+{% endschema %}

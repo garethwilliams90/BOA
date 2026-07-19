@@ -372,6 +372,37 @@
       }
     }
   },
+  "blocks": {
+    "product_card": {
+      "name": "Product card",
+      "settings": {
+        "product": {
+          "label": "Product"
+        },
+        "redirect_to_cart": {
+          "label": "Redirect to cart after add"
+        },
+        "custom_title": {
+          "label": "Custom product title"
+        },
+        "custom_description": {
+          "label": "Custom product description"
+        },
+        "label_text_color": {
+          "label": "Label text color"
+        },
+        "label_background_color": {
+          "label": "Label background color"
+        },
+        "cta_available_text": {
+          "label": "CTA available text"
+        },
+        "cta_out_of_stock_text": {
+          "label": "CTA out-of-stock text"
+        }
+      }
+    }
+  },
   "sections": {
     "all": {
       "animation": {
