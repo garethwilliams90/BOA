@@ -121,16 +121,6 @@ Each carousel slide is one instance of this block. Each instance has its own set
 - [ ] Labels pull text from `custom.product_labels` metafield and styling from block color settings
 - [ ] Tested against both sample products (with and without color variants, short and long labels)
 
-## Submission Requirements (not part of the code, but don't forget)
-
-- Private GitHub repo containing the theme code
-- `README.md` in the repo describing:
-  - the theme blocks built
-  - instructions for testing (including the actual storefront URLs where the blocks are set up)
-- Invite with **read** access:
-  - simone@boaideas.com
-  - reneta@boaideas.com
-- Email both of the above once complete (or if questions come up) before considering the assignment done
 
 ## Useful References
 
